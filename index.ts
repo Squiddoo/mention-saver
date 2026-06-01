@@ -1,6 +1,7 @@
 import { definePluginSettings } from "@api/Settings";
 import { get as dsGet, set as dsSet } from "@api/DataStore";
 import definePlugin, { OptionType } from "@utils/types";
+import { FluxDispatcher, UserStore } from "@webpack/common";
 
 const KEY = "mention-saver-v1";
 const CAT_AVATAR = "https://cdn.discordapp.com/attachments/1483839862112129167/1511045301711147291/arabcat.jpg";
@@ -79,19 +80,18 @@ export default definePlugin({
 
     _patchMessages() {
         try {
-            const FluxDispatcher = BdApi.Webpack.getModule((m: any) => m?.dispatch && m?.subscribe);
-            if (!FluxDispatcher || typeof FluxDispatcher.subscribe !== "function") return;
-
-            this._unpatch = FluxDispatcher.subscribe("MESSAGE_CREATE", async (event: any) => {
+            this._msgHandler = async (event: any) => {
                 const msg = event?.message;
                 if (!msg) return;
 
-                const myId = BdApi.UserStore.getCurrentUser?.()?.id;
+                // Use Vencord's UserStore directly — much more reliable than BdApi
+                const myId = UserStore.getCurrentUser()?.id;
                 if (!myId) return;
 
                 const isMentioned =
                     msg.mentions?.some?.((u: any) => u?.id === myId) ||
-                    msg.content?.includes?.(`<@${myId}>`);
+                    msg.content?.includes?.(`<@${myId}>`) ||
+                    msg.content?.includes?.(`<@!${myId}>`);
                 if (!isMentioned) return;
 
                 if (!Array.isArray(this.logs)) this.logs = [];
@@ -109,9 +109,11 @@ export default definePlugin({
 
                 try { await dsSet(KEY, this.logs); } catch { /* ignore */ }
 
-                // Update badge count if panel is closed
                 this._updateBadge();
-            });
+            };
+
+            FluxDispatcher.subscribe("MESSAGE_CREATE", this._msgHandler);
+            this._unpatch = () => FluxDispatcher.unsubscribe("MESSAGE_CREATE", this._msgHandler);
         } catch (e) {
             console.error("[MentionSaver] Patch error:", e);
         }
