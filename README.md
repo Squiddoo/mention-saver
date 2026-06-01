@@ -49,7 +49,7 @@ This plugin requires Vencord to be **built from source**.
    Or clone directly:
    ```bash
    cd src/userplugins
-   git clone https://github.com/MikaJonkovic/mention-saver mentionSaver
+   git clone https://github.com/Squiddoo/mention-saver mentionSaver
    ```
 
 3. **Build and inject**
