@@ -16,6 +16,12 @@
 
 Discord's built-in inbox is great — until you accidentally dismiss a mention and it's gone forever. **Mention Saver** fixes that. It runs silently in the background, intercepts every message that mentions you, and stores it locally. A small bell icon lives in your Discord title bar, ready whenever you need it.
 
+**Especially useful when:**
+- 💣 A channel gets **nuked** before you had the chance to read your mention
+- 🚪 You get **kicked from a group chat** and lose access to the message
+- 👻 A message gets **deleted** right after you were mentioned
+- 📵 You were **offline** and mentions piled up in a busy server
+
 ## Features
 
 | | |
