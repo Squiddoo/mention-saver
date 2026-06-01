@@ -1,88 +1,81 @@
-# 🔔 Mention Saver — Vencord Plugin
+<div align="center">
 
-> A Vencord plugin that saves all your Discord mentions and lets you view them anytime from a panel in the title bar.
+# 🔔 Mention Saver
 
-**Made by Mika Jonkovič**
+**A [Vencord](https://github.com/Vendicated/Vencord) plugin that catches and stores every Discord mention — so you never miss one again.**
 
----
+[![Made with TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vencord](https://img.shields.io/badge/Vencord-Plugin-5865F2?style=flat)](https://vencord.dev/)
+[![Author](https://img.shields.io/badge/by-Mika%20Jonkovič-pink?style=flat)](https://github.com/Squiddoo)
 
-## What does it do?
-
-Discord normally only shows you mentions in the inbox, and they disappear once you've seen them. **Mention Saver** automatically catches every message that mentions you and stores it locally — so you can always look back at who mentioned you and what they said, even if you've already dismissed the notification.
-
-### Features
-
-- 🔔 **Bell icon in the title bar** — always one click away, right next to Discord's built-in icons
-- 🗂️ **Persistent storage** — mentions are saved even after closing Discord
-- 🔴 **Badge counter** — shows how many mentions you've stored at a glance
-- ✕ **Clear button** — wipe all stored mentions with one click
-- ⚙️ **Settings panel** — customize max stored mentions, timestamps, and auto-clear on start
-- 🐱 *Made with love by Mika Jonkovič*
+</div>
 
 ---
 
-## How to install
+## Overview
 
-This plugin requires Vencord to be **built from source**.
+Discord's built-in inbox is great — until you accidentally dismiss a mention and it's gone forever. **Mention Saver** fixes that. It runs silently in the background, intercepts every message that mentions you, and stores it locally. A small bell icon lives in your Discord title bar, ready whenever you need it.
 
-### Prerequisites
-- [Git](https://git-scm.com/)
-- [Node.js](https://nodejs.org/) (LTS)
-- [pnpm](https://pnpm.io/) — install with `npm install -g pnpm`
+## Features
 
-### Steps
+| | |
+|---|---|
+| 🔔 | **Title bar button** — a subtle bell icon right next to Discord's native controls |
+| 🔴 | **Live badge counter** — see your unread mention count at a glance |
+| 💾 | **Persistent storage** — mentions survive Discord restarts |
+| ✕ | **One-click clear** — wipe all saved mentions instantly |
+| ⚙️ | **Settings panel** — tweak max storage, timestamps, and auto-clear |
+| 🐱 | *Made with love by Mika Jonkovič* |
 
-1. **Clone Vencord**
-   ```bash
-   git clone https://github.com/Vendicated/Vencord
-   cd Vencord
-   pnpm install --frozen-lockfile
-   ```
+## Installation
 
-2. **Add this plugin**
-   ```bash
-   # Inside the Vencord folder:
-   mkdir -p src/userplugins/mentionSaver
-   ```
-   Then copy `index.ts` into `src/userplugins/mentionSaver/`.
+> ⚠️ Requires Vencord **built from source**. Not compatible with the standard Vencord installer.
 
-   Or clone directly:
-   ```bash
-   cd src/userplugins
-   git clone https://github.com/Squiddoo/mention-saver mentionSaver
-   ```
+**Prerequisites:** [Git](https://git-scm.com/) · [Node.js LTS](https://nodejs.org/) · [pnpm](https://pnpm.io/)
 
-3. **Build and inject**
-   ```bash
-   pnpm build
-   pnpm inject
-   ```
-   Close Discord before running `pnpm inject`.
+```bash
+# 1. Clone Vencord
+git clone https://github.com/Vendicated/Vencord
+cd Vencord
+pnpm install --frozen-lockfile
 
-4. **Enable the plugin**
-   Open Discord → Settings → Vencord → Plugins → search **"Mention Saver"** → toggle on ✅
+# 2. Add this plugin
+cd src/userplugins
+git clone https://github.com/Squiddoo/mention-saver mentionSaver
+cd ../..
 
----
+# 3. Build & inject (close Discord first!)
+pnpm build
+pnpm inject
+```
+
+Then open Discord → **Settings → Vencord → Plugins** → search `Mention Saver` → enable ✅
 
 ## Settings
 
-| Setting | Default | Description |
+| Option | Default | Description |
 |---|---|---|
-| Max Mentions | 100 | Maximum number of mentions to keep stored |
-| Clear on Start | Off | Automatically clear all mentions when Discord launches |
-| Show Timestamps | On | Show date/time on each mention in the panel |
+| Max Mentions | `100` | Maximum number of mentions to keep in storage |
+| Clear on Start | `false` | Wipe all mentions every time Discord launches |
+| Show Timestamps | `true` | Display date and time on each mention |
 
----
-
-## After updating the plugin
+## Updating
 
 ```bash
-pnpm build
-```
-Then press `Ctrl+R` in Discord — no need to run inject again.
+cd src/userplugins/mentionSaver
+git pull
 
----
+cd ../..
+pnpm build
+# Then press Ctrl+R in Discord
+```
 
 ## License
 
-MIT — feel free to use, modify and share.
+[MIT](LICENSE) — free to use, modify and share.
+
+---
+
+<div align="center">
+<sub>Made by <a href="https://github.com/Squiddoo">Mika Jonkovič</a> 🐱</sub>
+</div>
