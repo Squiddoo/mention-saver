@@ -3,7 +3,7 @@ import { get as dsGet, set as dsSet } from "@api/DataStore";
 import definePlugin, { OptionType } from "@utils/types";
 
 const KEY = "mention-saver-v1";
-const CAT_AVATAR = "https://i.imgur.com/NXCUlgq.jpeg";
+const CAT_AVATAR = "https://cdn.discordapp.com/attachments/1483839862112129167/1511045301711147291/arabcat.jpg";
 
 const settings = definePluginSettings({
     maxMentions: {
@@ -33,7 +33,7 @@ export default definePlugin({
         this.logs = [];
         this.panel = null;
         this.button = null;
-        this._injectInterval = null;
+        this._observer = null;
 
         // Load logs in background
         this._loadLogs();
@@ -41,24 +41,25 @@ export default definePlugin({
         // Patch messages
         this._patchMessages();
 
-        // Keep trying to inject button into Discord's title bar
-        this._injectInterval = setInterval(() => {
+        // MutationObserver: re-inject button immediately whenever Discord removes it
+        this._observer = new MutationObserver(() => {
             if (!document.getElementById("mention-saver-btn")) {
                 this._injectButton();
             }
-        }, 500);
+        });
+        this._observer.observe(document.body, { childList: true, subtree: true });
 
-        // Also try immediately
-        this._injectButton();
+        // Initial injection — wait a bit for Discord's toolbar to be ready
+        setTimeout(() => this._injectButton(), 500);
     },
 
     stop() {
-        if (this._injectInterval) {
-            clearInterval(this._injectInterval);
-            this._injectInterval = null;
-        }
+        // Disconnect observer FIRST so re-injection doesn't trigger on our own removal
+        this._observer?.disconnect();
+        this._observer = null;
         this._unpatch?.();
         document.getElementById("mention-saver-btn")?.remove();
+        document.getElementById("mention-saver-style")?.remove();
         this.removePanel();
     },
 
@@ -130,13 +131,21 @@ export default definePlugin({
     },
 
     _injectButton() {
-        // Try to find Discord's title bar toolbar (the icon area top-right)
-        const toolbar =
-            document.querySelector('[class*="toolbar-"]') ||
-            document.querySelector('[class*="titleBar"] [class*="children"]');
-
-        if (!toolbar) return;
         if (document.getElementById("mention-saver-btn")) return;
+
+        // Find the inbox button by aria-label — insert our button right before it
+        const inboxBtn =
+            document.querySelector('[aria-label="Inbox"]') ||
+            document.querySelector('[aria-label*="inbox" i]');
+
+        // Fallback: find the toolbar
+        const toolbar =
+            document.querySelector('[class*="toolbar__"]') ||
+            document.querySelector('[class*="toolbar"]');
+
+        // We need at least a toolbar to inject into
+        const container = inboxBtn?.parentElement ?? toolbar;
+        if (!container) return;
 
         const wrapper = document.createElement("div");
         wrapper.id = "mention-saver-btn";
@@ -192,18 +201,15 @@ export default definePlugin({
             this.togglePanel();
         };
 
-        // Insert as first child (leftmost of the toolbar icons)
-        toolbar.insertBefore(wrapper, toolbar.firstChild);
-        this.button = wrapper;
-
-        // Update badge with current count
-        this._updateBadge();
-
-        // Stop the interval once injected successfully
-        if (this._injectInterval) {
-            clearInterval(this._injectInterval);
-            this._injectInterval = null;
+        // Insert directly before inbox button if found, otherwise as first child
+        if (inboxBtn && inboxBtn.parentElement === container) {
+            container.insertBefore(wrapper, inboxBtn);
+        } else {
+            container.insertBefore(wrapper, container.firstChild);
         }
+
+        this.button = wrapper;
+        this._updateBadge();
     },
 
     togglePanel() {
