@@ -81,6 +81,7 @@ export default definePlugin({
 
     async _saveMention(entry: any) {
         if (!Array.isArray(this.logs)) this.logs = [];
+        entry.unread = true;
         this.logs.push(entry);
         const max = settings.store.maxMentions ?? 100;
         if (this.logs.length > max) this.logs = this.logs.slice(-max);
@@ -255,9 +256,9 @@ export default definePlugin({
     _updateBadge() {
         const badge = document.getElementById("mention-saver-badge");
         if (!badge) return;
-        const count = Array.isArray(this.logs) ? this.logs.length : 0;
-        if (count > 0) {
-            badge.textContent = count > 99 ? "99+" : String(count);
+        const unreadCount = Array.isArray(this.logs) ? this.logs.filter(l => l.unread).length : 0;
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount > 99 ? "99+" : String(unreadCount);
             badge.style.display = "flex";
         } else {
             badge.style.display = "none";
@@ -505,15 +506,24 @@ export default definePlugin({
         this.panel.appendChild(footer);
         document.body.appendChild(this.panel);
 
-        // Auto-clear the notifications now that they have been opened and seen
-        if (this.logs.length > 0) {
-            this.logs = [];
-            dsSet(KEY, []).catch(() => {});
+        // Mark all as read so the badge clears, but keep them in the list
+        let changed = false;
+        for (const log of this.logs) {
+            if (log.unread) {
+                log.unread = false;
+                changed = true;
+            }
+        }
+        if (changed) {
+            dsSet(KEY, this.logs).catch(() => {});
             this._updateBadge();
         }
 
         header.querySelector("#mention-clear-btn")?.addEventListener("click", async () => {
+            this.logs = [];
+            try { await dsSet(KEY, []); } catch { /* ignore */ }
             this.removePanel();
+            this._updateBadge();
         });
 
         this._outsideClick = (e: MouseEvent) => {
