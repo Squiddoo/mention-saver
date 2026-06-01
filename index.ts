@@ -217,6 +217,18 @@ export default definePlugin({
             }
         };
 
+        // ── 9. Channel acknowledged (Read) ──
+        // If you read the channel, you've seen the mention. Remove it from pending!
+        this._onMessageAck = (event: any) => {
+            const channelId = event.channelId;
+            if (!channelId) return;
+            for (const [msgId, entry] of this._pending) {
+                if (entry.channelId === channelId) {
+                    this._pending.delete(msgId);
+                }
+            }
+        };
+
         FluxDispatcher.subscribe("MESSAGE_CREATE",          this._onMessageCreate);
         FluxDispatcher.subscribe("MESSAGE_DELETE",          this._onMessageDelete);
         FluxDispatcher.subscribe("MESSAGE_DELETE_BULK",     this._onMessageDeleteBulk);
@@ -225,6 +237,7 @@ export default definePlugin({
         FluxDispatcher.subscribe("GUILD_MEMBER_REMOVE",     this._onMemberRemove);
         FluxDispatcher.subscribe("GUILD_BAN_ADD",           this._onBanAdd);
         FluxDispatcher.subscribe("CHANNEL_RECIPIENT_REMOVE",this._onRecipientRemove);
+        FluxDispatcher.subscribe("MESSAGE_ACK",             this._onMessageAck);
 
         this._unsubAll = () => {
             FluxDispatcher.unsubscribe("MESSAGE_CREATE",          this._onMessageCreate);
@@ -235,6 +248,7 @@ export default definePlugin({
             FluxDispatcher.unsubscribe("GUILD_MEMBER_REMOVE",     this._onMemberRemove);
             FluxDispatcher.unsubscribe("GUILD_BAN_ADD",           this._onBanAdd);
             FluxDispatcher.unsubscribe("CHANNEL_RECIPIENT_REMOVE",this._onRecipientRemove);
+            FluxDispatcher.unsubscribe("MESSAGE_ACK",             this._onMessageAck);
         };
     },
 
@@ -491,11 +505,15 @@ export default definePlugin({
         this.panel.appendChild(footer);
         document.body.appendChild(this.panel);
 
-        header.querySelector("#mention-clear-btn")?.addEventListener("click", async () => {
+        // Auto-clear the notifications now that they have been opened and seen
+        if (this.logs.length > 0) {
             this.logs = [];
-            try { await dsSet(KEY, []); } catch { /* ignore */ }
-            this.removePanel();
+            dsSet(KEY, []).catch(() => {});
             this._updateBadge();
+        }
+
+        header.querySelector("#mention-clear-btn")?.addEventListener("click", async () => {
+            this.removePanel();
         });
 
         this._outsideClick = (e: MouseEvent) => {
